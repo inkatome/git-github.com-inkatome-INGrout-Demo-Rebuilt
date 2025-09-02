@@ -23,7 +23,7 @@ end
 function MapService:load(mapName)
     local mapData = require("assets.maps." .. mapName)
     self.currentMap = mapData
-    print("Loaded map:", mapName)
+    -- print("Loaded map:", mapName)
 
     -- 预加载背景层纹理
     self.layerTextures = {}
@@ -80,7 +80,9 @@ end
 
 -- 更新相机位置
 function MapService:updateCamera(dt)
-    if not self.camera.target or not self.currentMap then print("no camera target or map") return end
+    if not self.camera.target or not self.currentMap then -- print("no camera target or map")
+        return
+    end
 
     local screenW, screenH = love.graphics.getDimensions()
     local mapW, mapH = self.currentMap.size.width, self.currentMap.size.height

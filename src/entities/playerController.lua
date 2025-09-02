@@ -55,8 +55,8 @@ function PlayerController:update(dt)
         self.proposedY = currentY + dy * self.moveSpeed * dt
         
         -- 调试信息
-        print(string.format("Player movement: dx=%.2f, dy=%.2f, proposedX=%.1f, proposedY=%.1f",
-            dx, dy, self.proposedX, self.proposedY))
+        -- print(string.format("Player movement: dx=%.2f, dy=%.2f, proposedX=%.1f, proposedY=%.1f",
+          --     dx, dy, self.proposedX, self.proposedY))
         
         -- 方向变化事件
         if dx ~= self.lastDirection.x or dy ~= self.lastDirection.y then

@@ -17,14 +17,14 @@ function state.init()
     -- 注册状态处理函数
     state.register(state.States.BOOT, {
         enter = function(previousState)
-            print("Entering BOOT state, previous state:", previousState or "nil")
+            -- print("Entering BOOT state, previous state:", previousState or "nil")
             state.transitionTo(state.States.LOADING)
         end
     })
     
     state.register(state.States.LOADING, {
         enter = function(previousState)
-            print("Entering LOADING state")
+            -- print("Entering LOADING state")
             state.loadProgress = 0
             
             -- 异步加载资源
@@ -58,7 +58,7 @@ function state.init()
     -- 主菜单状态
     state.register(state.States.MENU, {
         enter = function(previousState)
-            print("Entering MENU state")
+            -- print("Entering MENU state")
             
             -- 初始化UI管理器
             UIManager = require("src.ui.uiManager").new()
@@ -79,7 +79,7 @@ function state.init()
                 200, 50, 
                 "设置",
                 function()
-                    print("打开设置菜单")
+                    -- print("打开设置菜单")
                 end
             )
             
@@ -144,7 +144,7 @@ function state.init()
     -- 游戏进行状态
     state.register(state.States.PLAY, {
         enter = function(previousState, sceneName)
-            print("Entering PLAY state")
+            -- print("Entering PLAY state")
             
             -- 加载游戏场景
             local scene = sceneName or "village"
@@ -201,7 +201,7 @@ function state.init()
     -- 游戏暂停状态
     state.register(state.States.PAUSE, {
         enter = function(previousState)
-            print("Entering PAUSE state")
+            -- print("Entering PAUSE state")
             
             -- 创建暂停菜单
             UIManager = require("src.ui.uiManager").new()
@@ -268,7 +268,7 @@ function state.init()
     -- 对话状态
     state.register(state.States.DIALOG, {
         enter = function(previousState, npcEntity)
-            print("Entering DIALOG state with NPC:", npcEntity.id)
+            -- print("Entering DIALOG state with NPC:", npcEntity.id)
             
             -- 存储对话信息
             state.currentDialog = {

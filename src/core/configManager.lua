@@ -38,10 +38,10 @@ function ConfigManager:load()
     local success, loaded = pcall(love.filesystem.load, "config.lua")
     if success and type(loaded) == "function" then
         self.settings = loaded() or tableUtils.deepCopy(defaultConfig)
-        print("[CONFIG] Config loaded from file")
+        -- print("[CONFIG] Config loaded from file")
     else
         self.settings = tableUtils.deepCopy(defaultConfig)
-        print("[CONFIG] Using default settings")
+        -- print("[CONFIG] Using default settings")
     end
     return self.settings
 end

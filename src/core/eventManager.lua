@@ -31,7 +31,7 @@ events.PlayerEvents = {
 -- 初始化事件系统
 function events.init()
     events.listeners = {}
-    print("[EVENT] Event system initialized")
+    -- print("[EVENT] Event system initialized")
 end
 
 -- 注册事件监听器

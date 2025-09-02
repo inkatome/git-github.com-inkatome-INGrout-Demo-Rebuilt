@@ -32,7 +32,7 @@ function ResourceLoader:loadForScene(sceneName)
         end
     end
     
-    print("Loaded resources for:", sceneName)
+    -- print("Loaded resources for:", sceneName)
 end
 
 -- 加载场景数据
@@ -41,7 +41,7 @@ function ResourceLoader:loadSceneData(sceneName)
     if success then
         return sceneData
     else
-        print("[ERROR] Failed to load scene data for:", sceneName)
+        -- print("[ERROR] Failed to load scene data for:", sceneName)
         return nil
     end
 end
@@ -79,7 +79,7 @@ function ResourceLoader:loadEntityConfig(entityType)
     if success then
         return config
     else
-        print("[WARNING] No config found for entity type:", entityType)
+        -- print("[WARNING] No config found for entity type:", entityType)
         return nil
     end
 end
@@ -100,7 +100,7 @@ end
 function ResourceLoader:unload()
     self.loadedAssets = {}
     self.currentScene = nil
-    print("Unloaded resources")
+    -- print("Unloaded resources")
 end
 
 return ResourceLoader

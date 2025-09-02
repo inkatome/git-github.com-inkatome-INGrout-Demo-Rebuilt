@@ -73,9 +73,9 @@ function WorldManager:load(sceneName)
         end
         
         -- 调试信息：打印玩家初始位置和碰撞体设置
-        print(string.format("[WorldManager] Player initial position: %.1f, %.1f", x, y))
-        print(string.format("[WorldManager] Collision offset: %.1f, %.1f", offsetX, offsetY))
-        print(string.format("[WorldManager] Collision size: %.1f, %.1f", width, height))
+        -- print(string.format("[WorldManager] Player initial position: %.1f, %.1f", x, y))
+        -- print(string.format("[WorldManager] Collision offset: %.1f, %.1f", offsetX, offsetY))
+        -- print(string.format("[WorldManager] Collision size: %.1f, %.1f", width, height))
         
         self.collisionSystem:addDynamicCollider(player, {
             x = x + offsetX,
@@ -86,20 +86,20 @@ function WorldManager:load(sceneName)
         
         -- 立即检查初始位置是否有碰撞 (考虑偏移量)
         local initialCollided, initialCollisionType = self.collisionSystem:checkPosition(player, x, y)
-        print(string.format("[WorldManager] Initial position collision check: %s, type: %s",
-            initialCollided and "true" or "false", initialCollisionType or "none"))
+        -- print(string.format("[WorldManager] Initial position collision check: %s, type: %s",
+        --     initialCollided and "true" or "false", initialCollisionType or "none"))
         
         -- 如果有碰撞，检查是哪个静态碰撞体
         if initialCollided and initialCollisionType == "obstacle" then
-            print("[WorldManager] Checking which static collider is causing initial collision:")
+            -- print("[WorldManager] Checking which static collider is causing initial collision:")
             local playerCollider = self.collisionSystem:_getEntityCollider(player, x, y)
             
             -- 使用四叉树查询可能碰撞的静态碰撞体
             local potentialColliders = self.collisionSystem.staticQuadtree:query(playerCollider)
             for i, collider in ipairs(potentialColliders) do
                 if self.collisionSystem:_checkAABB(playerCollider, collider) then
-                    print(string.format("[WorldManager] Colliding with static collider %d: x=%.1f, y=%.1f, width=%.1f, height=%.1f, tag=%s",
-                        i, collider.x, collider.y, collider.width, collider.height, collider.tag or "none"))
+                    -- print(string.format("[WorldManager] Colliding with static collider %d: x=%.1f, y=%.1f, width=%.1f, height=%.1f, tag=%s",
+                    --     i, collider.x, collider.y, collider.width, collider.height, collider.tag or "none"))
                 end
             end
         end
@@ -140,7 +140,7 @@ function WorldManager:update(dt)
             
             if proposedX ~= currentX or proposedY ~= currentY then
                 -- 调试信息：打印建议位置
-                print(string.format("[WorldManager] Proposed position: %.1f, %.1f", proposedX, proposedY))
+                -- print(string.format("[WorldManager] Proposed position: %.1f, %.1f", proposedX, proposedY))
                 
                 -- 检查碰撞
                 -- 检查碰撞时需要考虑碰撞体偏移量
@@ -150,22 +150,22 @@ function WorldManager:update(dt)
                 
                 -- 调试信息
                 if collided then
-                    print(string.format("[WorldManager] Collision detected: %s at position %.1f, %.1f",
-                        collisionType or "unknown", proposedX, proposedY))
+                    -- print(string.format("[WorldManager] Collision detected: %s at position %.1f, %.1f",
+                    --     collisionType or "unknown", proposedX, proposedY))
                 else
-                    print(string.format("[WorldManager] No collision, updating position to %.1f, %.1f",
-                        proposedX, proposedY))
+                    -- print(string.format("[WorldManager] No collision, updating position to %.1f, %.1f",
+                    --     proposedX, proposedY))
                      
                     -- 更新transform组件或直接属性
                     if transform then
                         transform.x = proposedX
                         transform.y = proposedY
-                        print(string.format("[WorldManager] Updated transform position: %.1f, %.1f",
-                            transform.x, transform.y))
+                        -- print(string.format("[WorldManager] Updated transform position: %.1f, %.1f",
+                        --     transform.x, transform.y))
                     else
                         player.x, player.y = proposedX, proposedY
-                        print(string.format("[WorldManager] Updated player position: %.1f, %.1f",
-                            player.x, player.y))
+                        -- print(string.format("[WorldManager] Updated player position: %.1f, %.1f",
+            --     player.x, player.y))
                     end
                     
                     -- 更新碰撞系统中的动态物体位置（考虑偏移量）
@@ -204,7 +204,7 @@ end
 
 function WorldManager:toggleDebugMode()
     self.debugMode = not self.debugMode
-    print("Debug mode:", self.debugMode and "ON" or "OFF")
+    -- print("Debug mode:", self.debugMode and "ON" or "OFF")
 end
 
 -- 绘制调试信息
