@@ -7,8 +7,21 @@ function PlayerController.new(playerEntity)
     self.player = playerEntity
     self.moveSpeed = 200
     self.lastDirection = {x = 0, y = 1}
-    self.proposedX = playerEntity.x
-    self.proposedY = playerEntity.y
+    
+    -- 优先从transform组件获取坐标
+    local transform = playerEntity.components and playerEntity.components.transform
+    local x, y = 0, 0
+    
+    if transform then
+        x = transform.x or 0
+        y = transform.y or 0
+    else
+        x = playerEntity.x or 0
+        y = playerEntity.y or 0
+    end
+    
+    self.proposedX = x
+    self.proposedY = y
     return self
 end
 
@@ -26,8 +39,20 @@ function PlayerController:update(dt)
         local length = math.sqrt(dx*dx + dy*dy)
         dx, dy = dx/length, dy/length
         
-        self.proposedX = self.player.x + dx * self.moveSpeed * dt
-        self.proposedY = self.player.y + dy * self.moveSpeed * dt
+        -- 优先从transform组件获取当前位置
+        local transform = self.player.components and self.player.components.transform
+        local currentX, currentY = 0, 0
+        
+        if transform then
+            currentX = transform.x or 0
+            currentY = transform.y or 0
+        else
+            currentX = self.player.x or 0
+            currentY = self.player.y or 0
+        end
+        
+        self.proposedX = currentX + dx * self.moveSpeed * dt
+        self.proposedY = currentY + dy * self.moveSpeed * dt
         
         -- 方向变化事件
         if dx ~= self.lastDirection.x or dy ~= self.lastDirection.y then
@@ -43,8 +68,20 @@ function PlayerController:update(dt)
             dy = dy
         })
     else
-        self.proposedX = self.player.x
-        self.proposedY = self.player.y
+        -- 优先从transform组件获取当前位置
+        local transform = self.player.components and self.player.components.transform
+        local currentX, currentY = 0, 0
+        
+        if transform then
+            currentX = transform.x or 0
+            currentY = transform.y or 0
+        else
+            currentX = self.player.x or 0
+            currentY = self.player.y or 0
+        end
+        
+        self.proposedX = currentX
+        self.proposedY = currentY
     end
 end
 

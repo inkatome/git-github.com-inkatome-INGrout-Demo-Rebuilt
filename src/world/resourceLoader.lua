@@ -57,11 +57,17 @@ function ResourceLoader:loadEntity(entityDef)
     
     -- 添加碰撞体
     if entity.collision then
+        -- 优先使用entityDef中的坐标（通常来自地图定义），如果没有则使用entity中的默认值
+        local x = entityDef.x or entity.x or 0
+        local y = entityDef.y or entity.y or 0
+        local width = entity.collision.width or entity.width or 32
+        local height = entity.collision.height or entity.height or 32
+        
         table.insert(self.loadedAssets[self.currentScene].collision, {
-            x = entity.x,
-            y = entity.y,
-            width = entity.collision.width or entity.width,
-            height = entity.collision.height or entity.height,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
             type = entity.type
         })
     end

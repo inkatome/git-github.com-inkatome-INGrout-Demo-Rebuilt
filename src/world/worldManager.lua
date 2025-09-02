@@ -59,26 +59,50 @@ function WorldManager:update(dt)
     self.mapService:update(dt)
     
     -- 玩家移动处理
-    local player = self.entityCoordinator.playerEntity
-    if player then
-        local controller = player.components.playerControl.controller
-        local proposedX, proposedY = controller:getProposedPosition()
-        
-        if proposedX ~= player.x or proposedY ~= player.y then
-            local collided = self.collisionSystem:checkPosition(
-                player, proposedX, proposedY
-            )
+        local player = self.entityCoordinator.playerEntity
+        if player then
+            local controller = player.components.playerControl.controller
+            local proposedX, proposedY = controller:getProposedPosition()
             
-            if not collided then
-                player.x, player.y = proposedX, proposedY
-                -- 更新碰撞系统中的动态物体位置
-                self.collisionSystem:updateDynamicCollider(player, {
-                    x = player.x, y = player.y,
-                    width = player.width, height = player.height
-                })
+            -- 优先从transform组件获取当前位置
+            local transform = player.components and player.components.transform
+            local currentX, currentY = 0, 0
+            local currentWidth, currentHeight = 32, 32
+            
+            if transform then
+                currentX = transform.x or 0
+                currentY = transform.y or 0
+                currentWidth = transform.width or 32
+                currentHeight = transform.height or 32
+            else
+                currentX = player.x or 0
+                currentY = player.y or 0
+                currentWidth = player.width or 32
+                currentHeight = player.height or 32
+            end
+            
+            if proposedX ~= currentX or proposedY ~= currentY then
+                local collided = self.collisionSystem:checkPosition(
+                    player, proposedX, proposedY
+                )
+                
+                if not collided then
+                    -- 更新transform组件或直接属性
+                    if transform then
+                        transform.x = proposedX
+                        transform.y = proposedY
+                    else
+                        player.x, player.y = proposedX, proposedY
+                    end
+                    
+                    -- 更新碰撞系统中的动态物体位置
+                    self.collisionSystem:updateDynamicCollider(player, {
+                        x = proposedX, y = proposedY,
+                        width = currentWidth, height = currentHeight
+                    })
+                end
             end
         end
-    end
 end
 
 -- 绘制世界

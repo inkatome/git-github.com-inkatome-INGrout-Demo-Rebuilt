@@ -5,10 +5,17 @@ Enemy.__index = Enemy
 function Enemy.new(config)
     local self = setmetatable({}, Enemy)
     self.type = "enemy"
-    self.x = config.x or 300
-    self.y = config.y or 300
-    self.width = config.width or 32
-    self.height = config.height or 32
+    
+    -- 优先从transform组件获取坐标（如果有）
+    local configX = config.x or 300
+    local configY = config.y or 300
+    local configWidth = config.width or 32
+    local configHeight = config.height or 32
+    
+    self.x = configX
+    self.y = configY
+    self.width = configWidth
+    self.height = configHeight
     self.health = config.health or 50
     self.aiType = config.aiType or "patrol"
     self.collision = config.collision or {
@@ -34,9 +41,21 @@ function Enemy:updatePatrol(dt)
     local target = self.patrolPoints[self.currentPatrolIndex]
     if not target then return end
     
+    -- 优先从transform组件获取当前位置
+    local transform = self.components and self.components.transform
+    local currentX, currentY = 0, 0
+    
+    if transform then
+        currentX = transform.x or 0
+        currentY = transform.y or 0
+    else
+        currentX = self.x or 0
+        currentY = self.y or 0
+    end
+    
     -- 计算移动方向
-    local dx = target.x - self.x
-    local dy = target.y - self.y
+    local dx = target.x - currentX
+    local dy = target.y - currentY
     local distance = math.sqrt(dx*dx + dy*dy)
     
     if distance < 5 then
@@ -50,19 +69,43 @@ function Enemy:updatePatrol(dt)
     
     -- 向目标点移动
     local speed = 100 * dt
-    self.x = self.x + (dx / distance) * speed
-    self.y = self.y + (dy / distance) * speed
+    local newX = currentX + (dx / distance) * speed
+    local newY = currentY + (dy / distance) * speed
+    
+    -- 更新位置（同时更新transform组件和实体属性）
+    if transform then
+        transform.x = newX
+        transform.y = newY
+    end
+    self.x = newX
+    self.y = newY
 end
 
 -- 绘制敌人
 function Enemy:draw()
+    -- 优先从transform组件获取坐标
+    local transform = self.components and self.components.transform
+    local x, y, width, height = 0, 0, 32, 32
+    
+    if transform then
+        x = transform.x or 0
+        y = transform.y or 0
+        width = transform.width or 32
+        height = transform.height or 32
+    else
+        x = self.x or 0
+        y = self.y or 0
+        width = self.width or 32
+        height = self.height or 32
+    end
+    
     -- 实际项目中应使用纹理
     love.graphics.setColor(1, 0.2, 0.2)
-    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+    love.graphics.rectangle("fill", x, y, width, height)
     love.graphics.setColor(1, 1, 1)
     
     -- 显示敌人类型
-    love.graphics.print(self.aiType, self.x, self.y - 15)
+    love.graphics.print(self.aiType, x, y - 15)
 end
 
 return Enemy

@@ -2,6 +2,9 @@
 local MapService = {}
 MapService.__index = MapService
 
+-- 导入工具模块
+local mathUtils = require("src.utils.mathUtils")
+
 function MapService.new()
     local self = setmetatable({}, MapService)
     self.currentMap = nil
@@ -48,11 +51,30 @@ end
 
 -- 设置相机跟随目标
 function MapService:setCameraTarget(targetEntity)
+    if not targetEntity then return end
+    
+    -- 优先从transform组件获取坐标
+    local transform = targetEntity.components and targetEntity.components.transform
+    local x, y, width, height = 0, 0, 32, 32
+    
+    if transform then
+        x = transform.x or 0
+        y = transform.y or 0
+        width = transform.width or 32
+        height = transform.height or 32
+    else
+        -- 兼容直接存储在实体上的情况
+        x = targetEntity.x or 0
+        y = targetEntity.y or 0
+        width = targetEntity.width or 32
+        height = targetEntity.height or 32
+    end
+    
     self.camera.target = {
-        x = targetEntity.x + (targetEntity.width or 0)/2,
-        y = targetEntity.y + (targetEntity.height or 0)/2,
-        width = targetEntity.width,
-        height = targetEntity.height
+        x = x + width/2,
+        y = y + height/2,
+        width = width,
+        height = height
     }
 end
 
