@@ -100,23 +100,40 @@ function PlayerAnimationSystem:update(dt)
     end
 end
 
--- 绘制玩家（修改为实际绘制精灵图）
+-- 绘制玩家（修改为实际绘制精灵图，并考虑碰撞偏移量）
 function PlayerAnimationSystem:draw()
     local animation = self.animations[self.state][self.direction]
     if not animation then
         -- 默认渲染
         love.graphics.setColor(0, 0.5, 1)
-        love.graphics.rectangle("fill", self.player.x, self.player.y, 32, 32)
+        
+        -- 考虑碰撞偏移量
+        local collision = self.player.collision or {}
+        local offsetX = collision.offsetX or 0
+        local offsetY = collision.offsetY or 0
+        local renderX = self.player.x - offsetX
+        local renderY = self.player.y - offsetY
+        
+        love.graphics.rectangle("fill", renderX, renderY, 32, 32)
         return
     end
+    
+    -- 考虑碰撞偏移量
+    local collision = self.player.collision or {}
+    local offsetX = collision.offsetX or 0
+    local offsetY = collision.offsetY or 0
+    local playerX = self.player.x or 0
+    local playerY = self.player.y or 0
+    local renderX = playerX - offsetX
+    local renderY = playerY - offsetY
     
     local quad = animation.quads[self.currentFrame]
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(
         animation.texture, 
         quad, 
-        self.player.x, 
-        self.player.y
+        renderX, 
+        renderY
     )
 end
 

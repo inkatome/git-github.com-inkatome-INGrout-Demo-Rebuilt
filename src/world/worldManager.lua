@@ -17,6 +17,9 @@ function WorldManager.new()
     self.isWorldReady = false
     self.debugMode = false
     
+    -- 初始化中文字体
+    self.defaultFont = love.graphics.newFont("assets/fonts/SourceHanSansSC-Regular.otf")
+    
     return self
 end
 
@@ -91,7 +94,9 @@ function WorldManager:load(sceneName)
             print("[WorldManager] Checking which static collider is causing initial collision:")
             local playerCollider = self.collisionSystem:_getEntityCollider(player, x, y)
             
-            for i, collider in ipairs(self.collisionSystem.staticColliders) do
+            -- 使用四叉树查询可能碰撞的静态碰撞体
+            local potentialColliders = self.collisionSystem.staticQuadtree:query(playerCollider)
+            for i, collider in ipairs(potentialColliders) do
                 if self.collisionSystem:_checkAABB(playerCollider, collider) then
                     print(string.format("[WorldManager] Colliding with static collider %d: x=%.1f, y=%.1f, width=%.1f, height=%.1f, tag=%s",
                         i, collider.x, collider.y, collider.width, collider.height, collider.tag or "none"))
@@ -232,15 +237,23 @@ function WorldManager:drawDebugInfo()
     local collided, collisionType = self.collisionSystem:checkPosition(player, proposedX, proposedY)
 
     -- 绘制调试信息
-    love.graphics.setColor(1, 1, 1)  -- 白色文本
+    -- 设置黑色文本
+    love.graphics.setColor(0, 0, 0)
+    -- 设置较小的中文字体
+    local smallFont = love.graphics.newFont("assets/fonts/SourceHanSansSC-Regular.otf", 12)
+    love.graphics.setFont(smallFont)
+    
     love.graphics.print("=== 调试信息 ===", 10, 10)
-    love.graphics.print(string.format("当前位置: X=%.1f, Y=%.1f", currentX, currentY), 10, 30)
-    love.graphics.print(string.format("建议位置: X=%.1f, Y=%.1f", proposedX, proposedY), 10, 50)
-    love.graphics.print(string.format("碰撞偏移: X=%.1f, Y=%.1f", offsetX, offsetY), 10, 70)
-    love.graphics.print(string.format("碰撞状态: %s", collided and "碰撞" or "无碰撞"), 10, 90)
+    love.graphics.print(string.format("当前位置: X=%.1f, Y=%.1f", currentX, currentY), 10, 25)
+    love.graphics.print(string.format("建议位置: X=%.1f, Y=%.1f", proposedX, proposedY), 10, 40)
+    love.graphics.print(string.format("碰撞偏移: X=%.1f, Y=%.1f", offsetX, offsetY), 10, 55)
+    love.graphics.print(string.format("碰撞状态: %s", collided and "碰撞" or "无碰撞"), 10, 70)
     if collided then
-        love.graphics.print(string.format("碰撞类型: %s", collisionType or "未知"), 10, 110)
+        love.graphics.print(string.format("碰撞类型: %s", collisionType or "未知"), 10, 85)
     end
+    
+    -- 重置字体为默认
+    love.graphics.setFont(self.defaultFont)
 
     -- 重置颜色
     love.graphics.setColor(1, 1, 1, 1)

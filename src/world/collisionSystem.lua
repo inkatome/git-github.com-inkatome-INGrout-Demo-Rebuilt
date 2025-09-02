@@ -1,10 +1,11 @@
--- 重构后的碰撞系统
+-- 整合四叉树的碰撞系统
+local Quadtree = require('src.utils.quadtree')
 local CollisionSystem = {}
 CollisionSystem.__index = CollisionSystem
 
 function CollisionSystem.new()
     local self = setmetatable({}, CollisionSystem)
-    self.staticColliders = {}  -- 静态碰撞体列表
+    self.staticQuadtree = nil  -- 静态碰撞体四叉树
     self.dynamicColliders = {} -- 动态碰撞体列表
     self.mapBounds = {x=0, y=0, width=0, height=0} -- 地图边界
     self.debug = false -- 调试标志
@@ -14,9 +15,11 @@ end
 -- 初始化碰撞系统
 function CollisionSystem:init(bounds)
     self.mapBounds = bounds or {x=0, y=0, width=0, height=0}
-    self.staticColliders = {}
     self.dynamicColliders = {}
     self.debug = false
+    
+    -- 初始化静态碰撞体四叉树
+    self.staticQuadtree = Quadtree.new(self.mapBounds, 10, 4, 0)
     
     if self.debug then
         print(string.format("[Collision] System initialized with bounds: %d, %d, %d, %d",
@@ -32,7 +35,7 @@ function CollisionSystem:addStaticCollider(collider)
         end
         return
     end
-    table.insert(self.staticColliders, collider)
+    self.staticQuadtree:insert(collider)
     
     if self.debug then
         print(string.format("[Collision] Added static collider: %d, %d, %d, %d",
@@ -90,8 +93,9 @@ function CollisionSystem:checkPosition(entity, x, y)
         return true, "map_bounds"
     end
     
-    -- 检查静态碰撞体
-    for _, staticCollider in ipairs(self.staticColliders) do
+    -- 检查静态碰撞体 (使用四叉树优化)
+    local staticCollisions = self.staticQuadtree:query(collider)
+    for _, staticCollider in ipairs(staticCollisions) do
         if self:_checkAABB(collider, staticCollider) then
             if self.debug then
                 print(string.format("[Collision] Static collision at: %d, %d", collider.x, collider.y))
