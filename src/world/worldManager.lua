@@ -41,11 +41,63 @@ function WorldManager:load(sceneName)
     -- 设置碰撞系统
     local mapSize = self.mapService:getMapSize()
     self.collisionSystem:init({x=0, y=0, width=mapSize.width, height=mapSize.height})
+    self.collisionSystem.debug = true -- 启用碰撞调试
     
     -- 添加静态碰撞体
     local colliders = self.resourceLoader:getColliders()
     for _, collider in ipairs(colliders) do
         self.collisionSystem:addStaticCollider(collider)
+    end
+    
+    -- 添加玩家动态碰撞体
+    local player = self.entityCoordinator.playerEntity
+    if player then
+        local collision = player.collision or {}
+        local width = collision.width or 32
+        local height = collision.height or 32
+        local offsetX = collision.offsetX or 0
+        local offsetY = collision.offsetY or 0
+        
+        -- 获取玩家初始位置
+        local transform = player.components and player.components.transform
+        local x, y = 0, 0
+        if transform then
+            x = transform.x or 0
+            y = transform.y or 0
+        else
+            x = player.x or 0
+            y = player.y or 0
+        end
+        
+        -- 调试信息：打印玩家初始位置和碰撞体设置
+        print(string.format("[WorldManager] Player initial position: %.1f, %.1f", x, y))
+        print(string.format("[WorldManager] Collision offset: %.1f, %.1f", offsetX, offsetY))
+        print(string.format("[WorldManager] Collision size: %.1f, %.1f", width, height))
+        
+        self.collisionSystem:addDynamicCollider(player, {
+            x = x + offsetX,
+            y = y + offsetY,
+            width = width,
+            height = height
+        })
+        
+        -- 立即检查初始位置是否有碰撞 (考虑偏移量)
+        local initialCollided, initialCollisionType = self.collisionSystem:checkPosition(player, x, y)
+        print(string.format("[WorldManager] Initial position collision check: %s, type: %s",
+            initialCollided and "true" or "false", initialCollisionType or "none"))
+        
+        -- 如果有碰撞，检查是哪个静态碰撞体
+        if initialCollided and initialCollisionType == "obstacle" then
+            print("[WorldManager] Checking which static collider is causing initial collision:")
+            local playerCollider = self.collisionSystem:_getEntityCollider(player, x, y)
+            
+            for i, collider in ipairs(self.collisionSystem.staticColliders) do
+                if self.collisionSystem:_checkAABB(playerCollider, collider) then
+                    print(string.format("[WorldManager] Colliding with static collider %d: x=%.1f, y=%.1f, width=%.1f, height=%.1f, tag=%s",
+                        i, collider.x, collider.y, collider.width, collider.height, collider.tag or "none"))
+                end
+            end
+        end
     end
     
     self.isWorldReady = true
@@ -82,25 +134,42 @@ function WorldManager:update(dt)
             end
             
             if proposedX ~= currentX or proposedY ~= currentY then
-                local collided = self.collisionSystem:checkPosition(
+                -- 调试信息：打印建议位置
+                print(string.format("[WorldManager] Proposed position: %.1f, %.1f", proposedX, proposedY))
+                
+                -- 检查碰撞
+                -- 检查碰撞时需要考虑碰撞体偏移量
+                local collided, collisionType = self.collisionSystem:checkPosition(
                     player, proposedX, proposedY
                 )
                 
-                if not collided then
+                -- 调试信息
+                if collided then
+                    print(string.format("[WorldManager] Collision detected: %s at position %.1f, %.1f",
+                        collisionType or "unknown", proposedX, proposedY))
+                else
+                    print(string.format("[WorldManager] No collision, updating position to %.1f, %.1f",
+                        proposedX, proposedY))
+                     
                     -- 更新transform组件或直接属性
                     if transform then
                         transform.x = proposedX
                         transform.y = proposedY
+                        print(string.format("[WorldManager] Updated transform position: %.1f, %.1f",
+                            transform.x, transform.y))
                     else
                         player.x, player.y = proposedX, proposedY
+                        print(string.format("[WorldManager] Updated player position: %.1f, %.1f",
+                            player.x, player.y))
                     end
                     
-                    -- 更新碰撞系统中的动态物体位置
-                    self.collisionSystem:updateDynamicCollider(player, {
-                        x = proposedX, y = proposedY,
-                        width = currentWidth, height = currentHeight
-                    })
+                    -- 更新碰撞系统中的动态物体位置（考虑偏移量）
+                    local collision = player.collision or {}
+                    local offsetX = collision.offsetX or 0
+                    local offsetY = collision.offsetY or 0
+                    self.collisionSystem:updateDynamicCollider(player, proposedX + offsetX, proposedY + offsetY)
                 end
+                
             end
         end
 end
@@ -128,11 +197,53 @@ function WorldManager:draw()
     end
 end
 
-function WorldManager:toggleDebugMode()  -- 
+function WorldManager:toggleDebugMode()
     self.debugMode = not self.debugMode
     print("Debug mode:", self.debugMode and "ON" or "OFF")
 end
 
--- 其他方法...
+-- 绘制调试信息
+function WorldManager:drawDebugInfo()
+    local player = self.entityCoordinator.playerEntity
+    if not player then return end
+
+    -- 优先从transform组件获取当前位置
+    local transform = player.components and player.components.transform
+    local currentX, currentY = 0, 0
+    if transform then
+        currentX = transform.x or 0
+        currentY = transform.y or 0
+    else
+        currentX = player.x or 0
+        currentY = player.y or 0
+    end
+
+    -- 获取控制器和建议位置
+    local controller = player.components.playerControl.controller
+    local proposedX, proposedY = 0, 0
+    if controller then
+        proposedX, proposedY = controller:getProposedPosition()
+    end
+
+    -- 检查碰撞状态
+    local collision = player.collision or {}
+    local offsetX = collision.offsetX or 0
+    local offsetY = collision.offsetY or 0
+    local collided, collisionType = self.collisionSystem:checkPosition(player, proposedX, proposedY)
+
+    -- 绘制调试信息
+    love.graphics.setColor(1, 1, 1)  -- 白色文本
+    love.graphics.print("=== 调试信息 ===", 10, 10)
+    love.graphics.print(string.format("当前位置: X=%.1f, Y=%.1f", currentX, currentY), 10, 30)
+    love.graphics.print(string.format("建议位置: X=%.1f, Y=%.1f", proposedX, proposedY), 10, 50)
+    love.graphics.print(string.format("碰撞偏移: X=%.1f, Y=%.1f", offsetX, offsetY), 10, 70)
+    love.graphics.print(string.format("碰撞状态: %s", collided and "碰撞" or "无碰撞"), 10, 90)
+    if collided then
+        love.graphics.print(string.format("碰撞类型: %s", collisionType or "未知"), 10, 110)
+    end
+
+    -- 重置颜色
+    love.graphics.setColor(1, 1, 1, 1)
+end
 
 return WorldManager
